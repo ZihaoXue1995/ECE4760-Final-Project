@@ -1,0 +1,208 @@
+<!-- js -->
+    <script src="socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="text/javascript">
+      var socket=io.connect('http://localhost:8086'); //Connects to the server
+      var musicMode = true;
+
+      function MusicMode() {
+     	socket.emit('message','m');
+      	musicMode = true;
+      }
+
+      function PianoMode()
+      {
+      	socket.emit('message','q');
+      	musicMode = false;
+      	Button.className = "u-play-btn play";
+      	last_index = -1;
+      	socket.emit('message','n');
+      }
+      var control = function(ev) {
+        ev = window.event || ev;
+        if (musicMode) 
+        {
+		 // Speaker Mode
+        	switch(ev.keyCode) {
+	          case 38:
+	          case 87:
+	            socket.emit('message','w');
+	            break;
+	          case 37:
+	          case 65:
+	            socket.emit('message','a');
+	            break;
+	          case 39:
+	          case 68:
+	            socket.emit('message','d');
+	            break;
+	          case 40:
+	          case 83:
+	            socket.emit('message','s');
+	            break;
+	        }
+        }
+        else {
+			// Piano Mode
+			  switch(ev.keyCode) {
+	          case 65:
+	            socket.emit('message','ba.wav');
+	            break;
+	          case 83:
+	            socket.emit('message','bs.wav');
+	            break;
+	          case 68:
+	            socket.emit('message','bd.wav');
+	            break;
+	          case 70:
+	            socket.emit('message','bf.wav');
+	            break;
+	          case 71:
+	            socket.emit('message','bg.wav');
+	            break;
+	          case 72:
+	            socket.emit('message','bh.wav');
+	            break;
+	          case 74:
+	            socket.emit('message','bj.wav');
+	            break;
+	          case 75:
+	            socket.emit('message','bk.wav');
+	            break;
+	          case 76:
+	            socket.emit('message','bl.wav');
+	            break;
+	        }
+        }
+      };
+      window.document.onkeydown=control;
+	var musicList = [
+		{
+			title : 'Vapor',
+			singer : 'ann annie',
+		},
+		{
+			title : 'The Beaten Path',
+			singer : 'Andrew Langdon',
+		},	
+		{
+			title : 'Dinner for Two',
+			singer : 'SYBS',
+		},
+		{
+			title : 'I Did That',
+			singer : 'Diamond Ortiz',
+		},
+		{
+			title : 'Sky Scraper',
+			singer : 'Geographer',
+		},
+		{
+			title : "Web Weaver's Dance",
+			singer : 'Asher Fulero',
+		},
+		{
+			title : 'Orange Sunset',
+			singer : 'Quincas Moreira',
+		},
+		{
+			title : 'A Valley Blast',
+			singer : 'Freedom Trail Studio',
+		},
+		{
+			title : 'Cry',
+			singer : 'Vibe Tracks',
+		},
+		{
+			title : 'Promises',
+			singer : 'Letter Box',
+		},
+	];
+
+	/************ Default indexing *************/
+    var current_index = 0, last_index = -1;
+    var default_e = "<h3>" + musicList[0].title + " -- " + musicList[0].singer + "</h3>";
+    document.querySelector(".grid-music-container .u-music-title").innerHTML = default_e;
+    var enabled = true;
+	var Button = document.querySelector(".grid-music-container .play");
+	
+	/************ Showcase the table list *************/
+	var e = "<ul>";
+    for (var i = 0; i < musicList.length; i++) 
+    {
+    	e += '<li><small>' + musicList[i].title + "</small> -- <small>" + musicList[i].singer + "</small></li>";
+    }
+    e += "</ul>";
+    document.querySelector(".grid-music-container .m-music-list-wrap").innerHTML = e;
+    var array = document.querySelectorAll(".m-music-list-wrap li");
+    for (var j = 0; j < musicList.length; j++) !
+    function(b) {
+        array[b].addEventListener("click",
+         function() {
+            var e = "<h3>" + musicList[b].title + " -- " + musicList[b].singer + "</h3>";
+            document.querySelector(".grid-music-container .u-music-title").innerHTML = e;
+            current_index = b;
+            console.log(current_index);
+			enabled = true;
+        	Button.className = "u-play-btn play";
+        	socket.emit('message', 'q');
+        })
+    } (j);
+
+	/************ Select the previous song *************/
+	function previous() {
+		socket.emit('message', 'q');
+		if (current_index == 0) {
+			current_index = musicList.length - 1;
+		}
+		else {
+			current_index -= 1;
+		}
+		console.log(current_index);
+		var e = "<h3>" + musicList[current_index].title + " -- " + musicList[current_index].singer + "</h3>";
+            document.querySelector(".grid-music-container .u-music-title").innerHTML = e;
+        enabled = true;
+        Button.className = "u-play-btn play";
+	};
+
+	/************ Select the next song *************/
+	function next() {
+		socket.emit('message', 'q');
+		if (current_index == musicList.length - 1) {
+			current_index = 0;
+		}
+		else {
+			current_index += 1;
+		}
+		console.log(current_index);
+		var e = "<h3>" + musicList[current_index].title + " -- " + musicList[current_index].singer + "</h3>";
+            document.querySelector(".grid-music-container .u-music-title").innerHTML = e;
+        enabled = true;
+        Button.className = "u-play-btn play";
+	};
+
+	/************ Play or pause the song *************/
+	function playorpause() {
+		// enabled is to decide wheter to change the icon
+		if (enabled) {
+			Button.className = "u-play-btn paused";
+			enabled = false;
+			if ( current_index == last_index ) {
+				socket.emit('message', 'p');
+				//console.log("play");
+			}
+			else{
+				last_index = current_index;
+				socket.emit('message', 'c'+ current_index + '.wav');
+				//console.log("play_new");
+			}
+		}
+		else {
+			Button.className = "u-play-btn play";
+			enabled = true;
+			socket.emit('message','p');
+			//console.log("pause");
+		}
+	}
+
+	</script>
